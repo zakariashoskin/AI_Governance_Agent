@@ -1,0 +1,37 @@
+version: "0.1"
+name: "AI Advisor Agent MVP Governance Policy"
+thresholds:
+  minimum_data_quality_score: 0.75
+rules:
+  - id: "GOV-001"
+    description: "The agent may analyze aggregated data only."
+    severity: "high"
+    blocks_direct_output: true
+  - id: "GOV-002"
+    description: "The agent may generate advisory hypotheses."
+    severity: "low"
+    blocks_direct_output: false
+  - id: "GOV-003"
+    description: "The agent may not process personally identifiable information."
+    severity: "critical"
+    blocks_direct_output: true
+  - id: "GOV-004"
+    description: "The agent may not contact customers or perform external actions."
+    severity: "critical"
+    blocks_direct_output: true
+  - id: "GOV-005"
+    description: "The agent may not make final strategic recommendations without human approval."
+    severity: "high"
+    blocks_direct_output: true
+  - id: "GOV-006"
+    description: "The agent must request human validation when data quality is insufficient."
+    severity: "high"
+    blocks_direct_output: true
+  - id: "GOV-007"
+    description: "The agent must request stakeholder input when organizational context is missing."
+    severity: "medium"
+    blocks_direct_output: true
+  - id: "GOV-008"
+    description: "The agent must log all tool calls and governance decisions."
+    severity: "high"
+    blocks_direct_output: false

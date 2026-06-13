@@ -1,0 +1,4 @@
+customer_name,industry,employees,region,organizational_context_available,known_context
+Example Pharma,Pharmaceuticals,64000,Denmark,False,No internal HR context has been provided for this prototype run.
+Example Manufacturing,Manufacturing,8500,Denmark,True,Recent reorganization and shift-work expansion are known context factors.
+Example Finance,Financial Services,4200,Nordics,False,No stakeholder interviews have been provided.
