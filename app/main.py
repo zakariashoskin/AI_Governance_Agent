@@ -29,19 +29,19 @@ def load_customer_names() -> list[str]:
 st.title("AI Advisor Agent")
 st.caption("Thesis MVP for governed, knowledge-intensive advisory work")
 
+with st.sidebar:
+    st.header("Advisory Goal")
+    customer = st.selectbox("Customer", load_customer_names(), index=0)
+    user_request = st.text_area(
+        "Request",
+        value="Generate an advisory brief based on aggregated claims, absence, and benchmark data.",
+        height=120,
+    )
+    run_agent = st.button("Generate advisory brief", type="primary")
+
 run_tab, audit_tab = st.tabs(["Advisory Agent", "Governance Audit Log"])
 
 with run_tab:
-    with st.sidebar:
-        st.header("Advisory Goal")
-        customer = st.selectbox("Customer", load_customer_names(), index=0)
-        user_request = st.text_area(
-            "Request",
-            value="Generate an advisory brief based on aggregated claims, absence, and benchmark data.",
-            height=120,
-        )
-        run_agent = st.button("Generate advisory brief", type="primary")
-
     st.info(
         "This prototype uses synthetic aggregated data only. It demonstrates agent planning, "
         "bounded tool use, governance checks, approval gating, and audit logging."
