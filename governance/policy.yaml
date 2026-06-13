@@ -1,37 +1,75 @@
-version: "0.1"
-name: "AI Advisor Agent MVP Governance Policy"
+version: "1.0"
+name: "Governed AI Advisor Agent Policy"
 thresholds:
   minimum_data_quality_score: 0.75
-rules:
-  - id: "GOV-001"
-    description: "The agent may analyze aggregated data only."
-    severity: "high"
-    blocks_direct_output: true
-  - id: "GOV-002"
-    description: "The agent may generate advisory hypotheses."
-    severity: "low"
-    blocks_direct_output: false
-  - id: "GOV-003"
-    description: "The agent may not process personally identifiable information."
-    severity: "critical"
-    blocks_direct_output: true
-  - id: "GOV-004"
-    description: "The agent may not contact customers or perform external actions."
-    severity: "critical"
-    blocks_direct_output: true
-  - id: "GOV-005"
-    description: "The agent may not make final strategic recommendations without human approval."
-    severity: "high"
-    blocks_direct_output: true
-  - id: "GOV-006"
-    description: "The agent must request human validation when data quality is insufficient."
-    severity: "high"
-    blocks_direct_output: true
-  - id: "GOV-007"
-    description: "The agent must request stakeholder input when organizational context is missing."
-    severity: "medium"
-    blocks_direct_output: true
-  - id: "GOV-008"
-    description: "The agent must log all tool calls and governance decisions."
-    severity: "high"
-    blocks_direct_output: false
+  minimum_provenance_confidence: 0.60
+
+allowed_actions:
+  - action: "analyze_aggregated_data"
+    rule_id: "ALLOW-001"
+    explanation: "Aggregated, approved data may be analyzed by the agent."
+  - action: "summarize_approved_internal_context"
+    rule_id: "ALLOW-002"
+    explanation: "Approved internal notes may be summarized when no personal data is included."
+  - action: "generate_advisory_hypotheses"
+    rule_id: "ALLOW-003"
+    explanation: "The agent may generate hypotheses for human review."
+
+approval_required_actions:
+  - action: "generate_final_recommendation"
+    rule_id: "APPROVAL-001"
+    required_human_role: "Senior advisor"
+    explanation: "Final customer-facing recommendations require human advisor approval."
+  - action: "prepare_stakeholder_email"
+    rule_id: "APPROVAL-002"
+    required_human_role: "Advisor"
+    explanation: "Stakeholder communication drafts require approval before simulated execution."
+  - action: "create_customer_facing_material"
+    rule_id: "APPROVAL-003"
+    required_human_role: "Senior advisor"
+    explanation: "Customer-facing material requires advisor validation."
+  - action: "escalate_risk"
+    rule_id: "APPROVAL-004"
+    required_human_role: "Senior advisor"
+    explanation: "Escalation changes the handling of the customer case and requires approval."
+  - action: "use_sensitive_business_context"
+    rule_id: "APPROVAL-005"
+    required_human_role: "Compliance"
+    explanation: "Sensitive business context requires compliance-aware human review."
+
+blocked_actions:
+  - action: "send_real_external_email"
+    rule_id: "BLOCK-001"
+    explanation: "The prototype must never send real external email."
+  - action: "process_personal_identifiable_information"
+    rule_id: "BLOCK-002"
+    explanation: "The prototype must not process personally identifiable information."
+  - action: "make_final_decision_autonomously"
+    rule_id: "BLOCK-003"
+    explanation: "The agent must not make final decisions autonomously."
+  - action: "contact_customer_directly"
+    rule_id: "BLOCK-004"
+    explanation: "The prototype must not contact customers directly."
+  - action: "change_customer_strategy"
+    rule_id: "BLOCK-005"
+    explanation: "The agent cannot change customer strategy."
+
+data_rules:
+  - id: "DATA-001"
+    description: "Data must be synthetic, aggregated, or explicitly approved for agent use."
+    decision: "blocked"
+  - id: "DATA-002"
+    description: "Potentially sensitive data requires human approval."
+    decision: "requires_approval"
+  - id: "DATA-003"
+    description: "Low-confidence provenance requires human validation."
+    decision: "requires_approval"
+
+oversight_rules:
+  - id: "HITL-001"
+    description: "Missing organizational context requires stakeholder or advisor input."
+    decision: "requires_approval"
+    required_human_role: "Advisor or HR stakeholder"
+  - id: "HITL-002"
+    description: "The agent must log tool calls, data sources, governance checks, approvals, and prepared actions."
+    decision: "allowed"

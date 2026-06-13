@@ -1,0 +1,4 @@
+meeting_id,customer_id,meeting_date,source_name,summary,confidence_level,approved_for_agent_use
+MEET-001,CUST-001,2026-04-22,Previous quarterly customer meeting,Customer asked about proactive wellbeing support but no concrete HR initiative was confirmed.,0.65,True
+MEET-002,CUST-002,2026-03-15,Operational wellbeing review,Customer discussed shift-work strain and planned supervisor training.,0.74,True
+MEET-003,CUST-003,2026-04-05,Insurance renewal meeting,Customer asked for aggregated absence trend interpretation.,0.67,True

@@ -1,92 +1,105 @@
 # AI Advisor Agent
 
-AI Advisor Agent is a thesis prototype that demonstrates how an AI agent can support knowledge-intensive advisory work in the financial sector while operating under explicit governance rules.
+AI Advisor Agent is a thesis prototype of a governed AI agent that supports a financial advisor working with a strategic B2B customer. The prototype models a full advisory journey from early signal detection to governed simulated follow-up action.
 
-The prototype is intentionally small and readable. It is not a generic chatbot. It shows an agent that interprets a goal, creates a plan, uses bounded tools, checks governance policy, requests human approval when needed, and writes an audit trail.
+The app is not a chatbot. It demonstrates an agent that receives a goal, creates a plan, uses tools, traces data provenance, detects missing context, asks for human input, applies governance policy, prepares bounded actions, requests approval, and writes an audit trail.
 
-All data in this repository is synthetic. The project must not be used with real customer, employee, health, claims, or personally identifiable data.
+All data is synthetic and for thesis demonstration only. The repository must not be used with real customer, employee, health, claims, insurance, PFA, or personal data.
 
 ## Thesis Context
 
-The prototype supports the research question:
+Research question:
 
 > How can AI agents be used to automate knowledge-intensive work processes in the financial sector, and what governance mechanisms are necessary to ensure responsible and value-creating use?
 
-The artifact is designed for a Design Science Research thesis. It makes abstract concepts such as agentic behavior, governance, human oversight, and auditability concrete enough to demonstrate, test, and discuss with stakeholders.
+The prototype supports a Design Science Research thesis by making the research argument visible in a working artifact: AI agents can support advisory work only when embedded in transparent workflows, human decision points, data provenance, governance mechanisms, and auditability.
 
-## What The App Demonstrates
+## Work Process Represented
 
-- A user selects a synthetic customer, such as `Example Pharma`.
-- The agent interprets the advisory goal.
-- The agent writes a short plan before using tools.
-- The agent calls bounded tools for data retrieval, analysis, benchmarking, quality checks, hypothesis generation, governance, and approval routing.
-- The governance layer blocks or gates risky outputs.
-- The final brief explicitly identifies missing organizational context.
-- Each run is appended to a local JSONL audit log.
+A financial advisor receives a signal that a customer may have an emerging health, insurance, or wellbeing issue. The signal may come from:
 
-## Architecture
+- Customer-facing chatbot
+- Advisory center conversation
+- Incident report
+- Claims data
+- Absence data
+- Previous customer meeting
+- Benchmark deviation
+
+The advisor uses the AI Advisor Agent to understand the signal, trace data sources, analyze aggregated data, identify hypotheses, detect missing business context, ask for human input, decide whether stakeholders should be contacted, draft a brief, run governance checks, prepare simulated actions, and log the process.
+
+## Default Demo Scenario
+
+- Customer: `Novo Nordisk`
+- Signal source: `Advisory center conversation`
+- Signal: increasing stress-related inquiries among employees
+- Supporting evidence: aggregated claims trend, advisory center notes, benchmark comparison, previous meeting note
+- Missing context: existing HR initiatives, ongoing reorganization, HR appetite for proactive intervention
+
+The agent concludes that there may be an emerging wellbeing issue, but the data is not sufficient for a final recommendation. HR input is required. The app can prepare a simulated HR email draft, but no real email is sent and approval is required.
+
+## App Structure
 
 ```text
-advisor-agent/
-  app/
-    main.py          Streamlit UI
-    agent.py         Agent orchestration and planning
-    tools.py         Bounded tool functions
-    governance.py    Governance policy evaluation
-    audit.py         JSONL audit logging
-    prompts.py       Replaceable LLM wrapper
-  data/              Synthetic CSV data only
-  governance/
-    policy.yaml      Human-readable policy rules
-  docs/
-    architecture.md
-    thesis_notes.md
-  tests/
-    test_governance.py
-    test_tools.py
+app/
+  main.py
+  pages/
+    1_Dashboard.py
+    2_Workflow.py
+    3_Audit_Log.py
+  agent.py
+  tools.py
+  governance.py
+  audit.py
+  ui_components.py
+  data_loader.py
+  prompts.py
+
+data/
+  customers.csv
+  signals.csv
+  claims_data.csv
+  benchmark_data.csv
+  stakeholder_directory.csv
+  previous_meetings.csv
+  advisory_center_notes.csv
+  chatbot_interactions.csv
+  incident_reports.csv
+
+governance/
+  policy.yaml
+
+docs/
+  architecture.md
+  thesis_notes.md
+  workflow_design.md
 ```
 
-Core workflow:
+## Governance Model
 
-1. Interpret the user request as an advisory goal.
-2. Create a 3-5 step plan before tool use.
-3. Retrieve synthetic customer context.
-4. Analyze aggregated claims and absence data.
-5. Compare the customer with synthetic benchmark data.
-6. Assess data quality.
-7. Generate advisory hypotheses.
-8. Check governance policy.
-9. Request human approval if policy requires it.
-10. Produce the advisory brief and audit log entry.
+Green actions are allowed:
 
-## Agent Tools
+- Analyze aggregated data
+- Summarize approved internal context
+- Generate draft hypotheses
 
-The current agent tools are:
+Yellow actions require approval:
 
-- `get_customer_context()`
-- `analyze_claims_data()`
-- `compare_to_benchmark()`
-- `assess_data_quality()`
-- `generate_advisory_hypotheses()`
-- `check_governance_policy()`
-- `request_human_approval()`
+- Generate final advisory recommendation
+- Prepare stakeholder email
+- Create customer-facing material
+- Escalate risk
+- Use sensitive business context
 
-These tools are local and bounded. They do not contact customers, send messages, access external systems, or process personal data.
+Red actions are blocked:
 
-## Governance
+- Send real external emails
+- Process personally identifiable information
+- Make final decisions autonomously
+- Contact customer directly
+- Change customer strategy
 
-The policy in `governance/policy.yaml` includes rules such as:
-
-- The agent may analyze aggregated data.
-- The agent may generate advisory hypotheses.
-- The agent may not process personally identifiable information.
-- The agent may not contact customers.
-- The agent may not make final strategic recommendations without human approval.
-- The agent must request human validation when data quality is insufficient.
-- The agent must request stakeholder input when organizational context is missing.
-- The agent must log all tool calls and governance decisions.
-
-## Setup
+## Run Locally
 
 ```bash
 cd advisor-agent
@@ -96,55 +109,28 @@ pip install -r requirements.txt
 streamlit run app/main.py
 ```
 
-Open the local Streamlit URL shown in the terminal.
+Open the local URL shown by Streamlit, usually:
 
-If local port permissions are strict, this form can be more reliable:
-
-```bash
-streamlit run app/main.py --server.address 127.0.0.1 --server.port 8501
+```text
+http://127.0.0.1:8501
 ```
 
-## Environment Variables
+## Deploy On Streamlit Cloud
 
-Copy `.env.example` to `.env` if you later add a real LLM provider:
+Use:
 
-```bash
-cp .env.example .env
+```text
+Repository: zakariashoskin/AI_Governance_Agent
+Branch: main
+Main file path: app/main.py
 ```
 
-The current MVP works without an API key because it uses deterministic placeholder generation.
-
-## Example Workflow
-
-1. Start the Streamlit app.
-2. Select `Example Pharma`.
-3. Keep the default request: `Generate an advisory brief based on aggregated claims, absence, and benchmark data.`
-4. Click `Generate advisory brief`.
-5. Review the visible agent goal, plan, tool calls, governance checks, and final advisory brief.
-6. Notice that the agent requests human approval when policy rules are triggered.
-7. Inspect `audit_logs/agent_audit.jsonl` locally to see the structured audit record.
+The repository includes `runtime.txt` and minimal production dependencies in `requirements.txt`.
 
 ## Tests
 
 ```bash
-cd advisor-agent
 PYTHONPATH=. pytest
 ```
 
-The tests verify tool behavior and governance blocking for prohibited actions such as PII, non-aggregated data, and external customer actions.
-
-## Design Science Research Relevance
-
-This repository is the first functional artifact for the thesis. It can be evaluated through scenario walkthroughs, governance rule tests, and feedback from advisors or governance stakeholders.
-
-Useful evaluation questions:
-
-- Does the agent behave differently from a chatbot?
-- Are tool calls and decisions understandable to a human reviewer?
-- Does the governance layer block prohibited behavior?
-- Does the agent clearly identify missing organizational context?
-- Is the audit trail sufficient for accountability?
-
-## Data And Privacy
-
-This project contains mock data only. Do not commit real company data, personal data, secrets, `.env` files, generated logs, or local cache files.
+The tests verify governance decisions, tool behavior, missing-context detection, workflow execution, simulated action preparation, and blocked actions.

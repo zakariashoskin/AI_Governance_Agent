@@ -1,0 +1,3 @@
+interaction_id,customer_id,interaction_date,source_name,intent,summary,confidence_level,approved_for_agent_use
+CHAT-001,CUST-001,2026-05-27,Customer-facing chatbot,Mental health support,Aggregated chatbot intents show more questions about stress support options.,0.71,True
+CHAT-002,CUST-003,2026-05-26,Customer-facing chatbot,Stress leave coverage,Aggregated chatbot intents show repeated questions about stress leave and insurance coverage.,0.69,True

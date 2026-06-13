@@ -1,95 +1,95 @@
-"""Streamlit UI for the AI Advisor Agent MVP."""
+"""Dashboard home for the governed AI Advisor Agent."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-import pandas as pd
 import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from app.agent import AdvisorAgent
-from app.audit_view import render_audit_log_page
-from app.tools import DATA_DIR
+from app.agent import AdvisorWorkflowAgent
+from app.data_loader import get_customer_by_name, get_customer_names, get_signal_sources
+from app.ui_components import card, inject_css, status_badge
 
 
 st.set_page_config(page_title="AI Advisor Agent", layout="wide")
-
-
-@st.cache_data
-def load_customer_names() -> list[str]:
-    customers = pd.read_csv(DATA_DIR / "sample_customer_data.csv")
-    return customers["customer_name"].tolist()
-
+inject_css()
 
 st.title("AI Advisor Agent")
-st.caption("Thesis MVP for governed, knowledge-intensive advisory work")
+st.caption("Governed workflow prototype for strategic B2B financial advisory")
 
-with st.sidebar:
-    st.header("Advisory Goal")
-    customer = st.selectbox("Customer", load_customer_names(), index=0)
-    user_request = st.text_area(
-        "Request",
-        value="Generate an advisory brief based on aggregated claims, absence, and benchmark data.",
-        height=120,
+st.markdown(
+    """
+    This prototype shows how an AI agent can support an advisor after an emerging
+    customer signal is detected. The agent plans, uses bounded tools, traces data
+    provenance, asks for missing human context, applies governance policy, prepares
+    simulated actions, and logs the process for audit.
+    """
+)
+
+customers = get_customer_names()
+default_customer = "Novo Nordisk" if "Novo Nordisk" in customers else customers[0]
+
+left, right = st.columns([1, 1])
+with left:
+    customer_name = st.selectbox(
+        "Strategic customer",
+        customers,
+        index=customers.index(default_customer),
     )
-    run_agent = st.button("Generate advisory brief", type="primary")
-
-run_tab, audit_tab = st.tabs(["Advisory Agent", "Governance Audit Log"])
-
-with run_tab:
-    st.info(
-        "This prototype uses synthetic aggregated data only. It demonstrates agent planning, "
-        "bounded tool use, governance checks, approval gating, and audit logging."
+with right:
+    customer = get_customer_by_name(customer_name)
+    signal_sources = get_signal_sources(customer["customer_id"])
+    signal_source = st.selectbox(
+        "Signal source",
+        signal_sources,
+        index=signal_sources.index("Advisory center conversation")
+        if "Advisory center conversation" in signal_sources
+        else 0,
     )
 
-    if run_agent:
-        with st.spinner("The agent is planning, analyzing data, and checking governance rules..."):
-            result = AdvisorAgent().generate_advisory_brief(customer, user_request)
+user_request = st.text_area(
+    "Advisor goal",
+    value=(
+        "Investigate the signal, identify possible wellbeing risks, determine missing "
+        "context, and prepare only governed next steps."
+    ),
+    height=90,
+)
 
-        st.subheader("Agent Goal")
-        st.write(result.goal)
+if st.button("Start governed workflow", type="primary"):
+    st.session_state.workflow = AdvisorWorkflowAgent().start_workflow(
+        customer_name=customer_name,
+        signal_source=signal_source,
+        user_request=user_request,
+    )
+    st.success("Workflow started. Open the Workflow page to inspect the agent journey.")
 
-        st.subheader("Agent Plan")
-        for index, step in enumerate(result.plan, start=1):
-            st.write(f"{index}. {step}")
+workflow = st.session_state.get("workflow")
+status_cols = st.columns(4)
+with status_cols[0]:
+    card("Current customer", workflow["customer"]["customer_name"] if workflow else customer_name)
+with status_cols[1]:
+    card("Signal source", workflow["signal"]["signal_source"] if workflow else signal_source)
+with status_cols[2]:
+    governance_status = (
+        workflow["governance_checks"][2]["decision"] if workflow else "pending"
+    )
+    card("Governance status", status_badge(governance_status))
+with status_cols[3]:
+    approval_status = (
+        workflow["approval_request"]["status"] if workflow else "pending"
+    )
+    card("Human approval", status_badge(approval_status))
 
-        st.subheader("Tool Calls")
-        st.dataframe(pd.DataFrame(result.tool_calls), use_container_width=True)
-
-        decision = result.governance
-        st.subheader("Governance Checks")
-        if decision["human_approval_required"]:
-            st.warning("Human approval required before customer-facing use.")
-        else:
-            st.success("Output can be shown directly under the configured policy.")
-
-        if result.governance["triggered_rules"]:
-            st.dataframe(pd.DataFrame(result.governance["triggered_rules"]), use_container_width=True)
-        else:
-            st.write("No governance rules were triggered.")
-
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Stress gap", result.benchmark_comparison["stress_gap"])
-        col2.metric("Absence gap", result.benchmark_comparison["absence_gap"])
-        col3.metric("Data quality", result.data_quality["data_quality_score"])
-
-        st.subheader("Final Advisory Brief")
-        st.markdown(result.advisory_brief)
-
-        st.subheader("Audit Log")
-        st.code(result.audit_log_path)
-    else:
-        st.subheader("What this MVP demonstrates")
-        st.write("- Goal interpretation and a visible agent plan")
-        st.write("- Bounded local data tools")
-        st.write("- Governance policy checks before output")
-        st.write("- Explicit human approval gating")
-        st.write("- JSONL audit logs for each run")
-
-with audit_tab:
-    render_audit_log_page()
+st.divider()
+st.subheader("Demo Scenario")
+st.write(
+    "Default scenario: Novo Nordisk, advisory center conversation, increasing "
+    "stress-related inquiries among employees. All data is synthetic and for thesis "
+    "demonstration only."
+)

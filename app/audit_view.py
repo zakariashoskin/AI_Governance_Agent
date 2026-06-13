@@ -9,15 +9,13 @@ import pandas as pd
 import streamlit as st
 
 from app.audit import load_audit_entries
-
-
-BLOCKING_RULE_IDS = {"GOV-001", "GOV-003", "GOV-004"}
+from app.ui_components import status_message
 
 
 def render_audit_log_page() -> None:
     """Render a thesis-friendly audit log view."""
 
-    st.subheader("Audit Log")
+    st.title("Governance Audit Log")
     st.write(
         "The audit log documents how the AI Advisor Agent uses tools, applies "
         "governance rules, and determines when human oversight is required."
@@ -25,7 +23,7 @@ def render_audit_log_page() -> None:
 
     entries = load_audit_entries()
     if not entries:
-        st.info("No audit entries yet. Generate an advisory brief to create the first log.")
+        st.info("No audit entries yet. Run the workflow to create the first log.")
         return
 
     filter_choice = st.radio(
@@ -33,150 +31,155 @@ def render_audit_log_page() -> None:
         ["Show all", "Allowed only", "Requires approval", "Blocked"],
         horizontal=True,
     )
-    filtered_entries = [
+    filtered = [
         entry for entry in reversed(entries) if _matches_filter(entry, filter_choice)
     ]
-
-    if not filtered_entries:
+    if not filtered:
         st.info("No audit entries match this filter.")
         return
 
-    for entry in filtered_entries:
-        _render_audit_card(entry)
+    for entry in filtered:
+        _render_card(entry)
 
 
-def _render_audit_card(entry: dict[str, Any]) -> None:
+def _render_card(entry: dict[str, Any]) -> None:
     status = _entry_status(entry)
-    timestamp = _format_timestamp(entry.get("timestamp_utc", ""))
-    title = f"{entry.get('customer', 'Unknown customer')} | {timestamp}"
-
     with st.container(border=True):
-        st.markdown(f"### {title}")
-        _render_status(status)
+        st.markdown(
+            f"### {entry.get('customer', 'Unknown customer')} | {_timestamp(entry)}"
+        )
+        status_message(status, _status_text(status))
 
         st.markdown("**User request**")
         st.write(entry.get("user_request", "Not recorded."))
 
-        st.markdown("**Agent goal**")
-        st.write(_agent_goal(entry))
+        st.markdown("**Signal source**")
+        st.write(entry.get("signal_source") or "Not recorded.")
 
         st.markdown("**Agent plan**")
-        for index, step in enumerate(entry.get("plan", []), start=1):
+        for index, step in enumerate(_plan(entry), start=1):
             st.write(f"{index}. {step}")
 
-        st.markdown("**Tools used**")
-        tool_calls = entry.get("tool_calls", [])
-        if tool_calls:
-            st.dataframe(_tool_call_table(tool_calls), use_container_width=True)
-        else:
-            st.write("No tool calls recorded.")
+        st.markdown("**Tool calls**")
+        _table(_tool_calls(entry))
 
         st.markdown("**Data sources used**")
-        data_sources = entry.get("data_sources_used", [])
-        st.write(", ".join(data_sources) if data_sources else "No data sources recorded.")
+        sources = entry.get("data_sources_used", [])
+        st.write(", ".join(sources) if sources else "No data sources recorded.")
 
-        st.markdown("**Governance rules triggered**")
-        rules = entry.get("governance_rules_triggered", [])
-        if rules:
-            st.dataframe(pd.DataFrame(rules), use_container_width=True)
+        st.markdown("**Human inputs added**")
+        _table(entry.get("human_inputs_added", []))
+
+        st.markdown("**Governance checks**")
+        checks = entry.get("governance_checks", [])
+        if checks:
+            _table(_flatten_checks(checks))
         else:
-            st.success("No governance rules were triggered.")
+            st.write("No governance checks recorded.")
 
-        st.markdown("**Missing organizational context**")
-        if _missing_context(entry):
-            st.warning("Organizational context is missing. Stakeholder input is required.")
-        else:
-            st.success("Organizational context is available for this run.")
+        st.markdown("**Approvals requested**")
+        _table(entry.get("approvals_requested", []))
 
-        st.markdown("**Human approval requirement**")
-        if entry.get("human_approval_required", False):
-            st.warning("Human approval is required before customer-facing use.")
-        else:
-            st.success("Human approval is not required under the current policy.")
+        st.markdown("**Approvals granted or denied**")
+        _table(entry.get("approvals_granted_or_denied", []))
 
-        st.markdown("**Final agent decision**")
-        st.write(_final_decision(entry))
+        st.markdown("**Blocked actions**")
+        _table(entry.get("blocked_actions", []))
+
+        st.markdown("**Prepared actions**")
+        _table(_prepared_actions(entry.get("prepared_actions", [])))
+
+        st.markdown("**Final output**")
+        st.write(entry.get("final_output") or entry.get("final_output_summary", "Not recorded."))
 
         with st.expander("Raw JSON"):
             st.json(entry)
 
 
-def _render_status(status: str) -> None:
-    if status == "Blocked":
-        st.error("Blocked by governance policy.")
-    elif status == "Requires approval":
-        st.warning("Requires human approval.")
-    else:
-        st.success("Allowed under the current governance policy.")
-
-
 def _entry_status(entry: dict[str, Any]) -> str:
-    triggered_ids = {
-        rule.get("rule_id") for rule in entry.get("governance_rules_triggered", [])
-    }
-    if triggered_ids.intersection(BLOCKING_RULE_IDS):
-        return "Blocked"
-    if entry.get("human_approval_required", False):
-        return "Requires approval"
-    return "Allowed"
+    checks = entry.get("governance_checks", [])
+    decisions = [check.get("decision") for check in checks if isinstance(check, dict)]
+    if "blocked" in decisions or entry.get("blocked_actions"):
+        return "blocked"
+    if "requires_approval" in decisions or entry.get("approvals_requested") or entry.get("human_approval_required"):
+        return "requires_approval"
+    return "allowed"
 
 
 def _matches_filter(entry: dict[str, Any], filter_choice: str) -> bool:
     status = _entry_status(entry)
-    if filter_choice == "Allowed only":
-        return status == "Allowed"
-    if filter_choice == "Requires approval":
-        return status == "Requires approval"
-    if filter_choice == "Blocked":
-        return status == "Blocked"
-    return True
-
-
-def _tool_call_table(tool_calls: list[dict[str, Any]]) -> pd.DataFrame:
-    return pd.DataFrame(
-        [
-            {
-                "Tool": call.get("tool", ""),
-                "Summary": call.get("result_summary", ""),
-                "Timestamp": _format_timestamp(call.get("timestamp_utc", "")),
-            }
-            for call in tool_calls
-        ]
+    return (
+        filter_choice == "Show all"
+        or (filter_choice == "Allowed only" and status == "allowed")
+        or (filter_choice == "Requires approval" and status == "requires_approval")
+        or (filter_choice == "Blocked" and status == "blocked")
     )
 
 
-def _missing_context(entry: dict[str, Any]) -> bool:
-    if "missing_organizational_context" in entry:
-        return bool(entry["missing_organizational_context"])
-    return any(
-        rule.get("rule_id") == "GOV-007"
-        for rule in entry.get("governance_rules_triggered", [])
-    )
+def _status_text(status: str) -> str:
+    if status == "blocked":
+        return "Blocked action detected. The agent did not execute prohibited behavior."
+    if status == "requires_approval":
+        return "Human approval is required before external or customer-facing action."
+    return "Allowed internal analysis under the current policy."
 
 
-def _agent_goal(entry: dict[str, Any]) -> str:
-    if entry.get("agent_goal"):
-        return entry["agent_goal"]
-    customer = entry.get("customer", "the selected customer")
-    return f"Produce a governed advisory brief for {customer} using synthetic data."
-
-
-def _final_decision(entry: dict[str, Any]) -> str:
-    if entry.get("final_agent_decision"):
-        return entry["final_agent_decision"]
-    status = _entry_status(entry)
-    if status == "Blocked":
-        return "Blocked by governance policy."
-    if status == "Requires approval":
-        return "Requires human approval before customer-facing use."
-    return "Allowed for direct display under the current policy."
-
-
-def _format_timestamp(timestamp: str) -> str:
+def _timestamp(entry: dict[str, Any]) -> str:
+    timestamp = entry.get("timestamp") or entry.get("timestamp_utc")
     if not timestamp:
         return "No timestamp"
     try:
         parsed = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+        return parsed.strftime("%Y-%m-%d %H:%M:%S UTC")
     except ValueError:
         return timestamp
-    return parsed.strftime("%Y-%m-%d %H:%M:%S UTC")
+
+
+def _plan(entry: dict[str, Any]) -> list[str]:
+    return entry.get("agent_plan") or entry.get("plan") or []
+
+
+def _tool_calls(entry: dict[str, Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "Tool": call.get("tool"),
+            "Summary": call.get("result_summary"),
+            "Timestamp": call.get("timestamp") or call.get("timestamp_utc"),
+        }
+        for call in entry.get("tool_calls", [])
+    ]
+
+
+def _flatten_checks(checks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for check in checks:
+        rows.append(
+            {
+                "Action": check.get("action"),
+                "Decision": check.get("decision"),
+                "Explanation": check.get("explanation"),
+                "Required role": check.get("required_human_role"),
+                "Next step": check.get("next_step"),
+            }
+        )
+    return rows
+
+
+def _prepared_actions(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "Action": action.get("action_type"),
+            "Stakeholder": action.get("stakeholder"),
+            "Status": action.get("status"),
+            "Reason": action.get("reason"),
+            "Simulated only": action.get("simulated_only"),
+        }
+        for action in actions
+    ]
+
+
+def _table(records: list[dict[str, Any]]) -> None:
+    if records:
+        st.dataframe(pd.DataFrame(records), use_container_width=True)
+    else:
+        st.write("None recorded.")

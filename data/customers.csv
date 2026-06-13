@@ -1,0 +1,4 @@
+customer_id,customer_name,industry,employees,region,relationship_owner,strategic_priority,organizational_context_available,known_context
+CUST-001,Novo Nordisk,Pharmaceuticals,64000,Denmark,Senior PFA Advisor,High,False,Synthetic scenario only. No verified HR context has been provided.
+CUST-002,Example Manufacturing,Manufacturing,8500,Denmark,Workplace Health Advisor,Medium,True,Recent shift-work expansion and supervisor training are known synthetic context factors.
+CUST-003,Example Finance,Financial Services,4200,Nordics,Senior Advisory Consultant,Medium,False,Synthetic scenario only. No stakeholder interviews have been provided.

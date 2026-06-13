@@ -1,0 +1,9 @@
+customer_id,year,claim_category,claim_count,claims_per_100_employees,absence_days_per_employee,data_quality_score,aggregation_level
+CUST-001,2024,Stress and mental health,340,5.8,6.8,0.87,company
+CUST-001,2024,Musculoskeletal,295,4.6,6.8,0.87,company
+CUST-001,2025,Stress and mental health,420,6.9,7.4,0.82,company
+CUST-001,2025,Musculoskeletal,310,4.9,7.4,0.82,company
+CUST-002,2024,Musculoskeletal,175,3.8,7.6,0.81,company
+CUST-002,2025,Musculoskeletal,190,4.1,8.1,0.76,company
+CUST-003,2024,Stress and mental health,120,5.9,5.7,0.73,company
+CUST-003,2025,Stress and mental health,155,7.2,6.2,0.68,company

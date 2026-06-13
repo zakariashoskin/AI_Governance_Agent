@@ -1,0 +1,4 @@
+note_id,customer_id,note_date,source_name,note_theme,note_summary,confidence_level,approved_for_agent_use
+NOTE-001,CUST-001,2026-05-28,Advisory center conversation,Stress-related inquiries,More employees asked about stress symptoms and available wellbeing support in recent advisory center conversations.,0.78,True
+NOTE-002,CUST-002,2026-05-18,Advisory center conversation,Physical strain,Conversations suggest increased questions about ergonomic support and absence prevention.,0.70,True
+NOTE-003,CUST-003,2026-05-26,Advisory center conversation,Stress leave coverage,Questions about insurance coverage during stress leave increased in the synthetic notes.,0.69,True

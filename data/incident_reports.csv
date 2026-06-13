@@ -1,0 +1,3 @@
+incident_id,customer_id,incident_date,source_name,incident_theme,summary,confidence_level,approved_for_agent_use
+INC-001,CUST-001,2026-05-21,Synthetic incident report,Workload concern,Aggregated report theme mentions perceived workload pressure without identifying individuals.,0.58,True
+INC-002,CUST-002,2026-05-18,Synthetic incident report,Musculoskeletal strain,Aggregated incident theme suggests strain related to shift work.,0.72,True

@@ -1,0 +1,6 @@
+signal_id,customer_id,signal_source,signal_title,signal_description,timestamp,confidence_level,structured,aggregated,potentially_sensitive,approved_for_agent_use
+SIG-001,CUST-001,Advisory center conversation,Increasing stress-related inquiries among employees,Advisor center notes indicate more questions about stress symptoms and mental health support options.,2026-05-28T09:20:00Z,0.78,False,True,False,True
+SIG-002,CUST-001,Claims data,Stress claims trend above benchmark,Aggregated claims trend shows stress-related claims above synthetic industry benchmark.,2026-05-30T08:15:00Z,0.84,True,True,False,True
+SIG-003,CUST-001,Previous customer meeting,Open question about proactive wellbeing support,Previous meeting notes mention interest in proactive prevention but no confirmed HR initiative.,2026-04-22T14:00:00Z,0.65,False,True,False,True
+SIG-004,CUST-002,Incident report,Increase in musculoskeletal incidents,Aggregated incident themes suggest physical strain after shift pattern changes.,2026-05-18T11:45:00Z,0.72,False,True,False,True
+SIG-005,CUST-003,Chatbot,Questions about stress leave and insurance coverage,Customer-facing chatbot received repeated synthetic inquiries about stress leave coverage.,2026-05-26T13:05:00Z,0.69,False,True,False,True

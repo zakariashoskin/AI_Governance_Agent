@@ -1,0 +1,6 @@
+customer_id,stakeholder_group,role,contact_channel,approval_required,notes
+CUST-001,HR,HR wellbeing partner,Simulated email draft,True,Use only as an in-app draft. Do not send real email.
+CUST-001,Compliance,Compliance liaison,Simulated internal review task,True,Required if sensitive business context is used.
+CUST-001,Senior advisor,Senior advisory lead,Simulated escalation task,True,Use for final customer-facing recommendation approval.
+CUST-002,HR,HR operations manager,Simulated email draft,True,Use only as an in-app draft.
+CUST-003,Legal,Legal contact,Simulated internal review task,True,Use for sensitive employment context.
