@@ -21,11 +21,14 @@ class AuditEvent:
     timestamp_utc: str
     user_request: str
     customer: str
+    agent_goal: str = ""
     plan: list[str] = field(default_factory=list)
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
     data_sources_used: list[str] = field(default_factory=list)
     governance_rules_triggered: list[dict[str, Any]] = field(default_factory=list)
+    missing_organizational_context: bool = False
     human_approval_required: bool = False
+    final_agent_decision: str = ""
     final_output_summary: str = ""
 
 
@@ -58,8 +61,11 @@ class AuditLogger:
         self,
         user_request: str,
         customer: str,
+        agent_goal: str,
         plan: list[str],
+        missing_organizational_context: bool,
         human_approval_required: bool,
+        final_agent_decision: str,
         final_output_summary: str,
     ) -> Path:
         AUDIT_DIR.mkdir(exist_ok=True)
@@ -68,14 +74,31 @@ class AuditLogger:
             timestamp_utc=datetime.now(timezone.utc).isoformat(),
             user_request=user_request,
             customer=customer,
+            agent_goal=agent_goal,
             plan=plan,
             tool_calls=self.tool_calls,
             data_sources_used=sorted(self.data_sources_used),
             governance_rules_triggered=self.governance_rules_triggered,
+            missing_organizational_context=missing_organizational_context,
             human_approval_required=human_approval_required,
+            final_agent_decision=final_agent_decision,
             final_output_summary=final_output_summary,
         )
         output_path = AUDIT_DIR / "agent_audit.jsonl"
         with output_path.open("a", encoding="utf-8") as audit_file:
             audit_file.write(json.dumps(asdict(event)) + "\n")
         return output_path
+
+
+def load_audit_entries(path: Path | None = None) -> list[dict[str, Any]]:
+    """Read audit entries from the local JSONL file."""
+
+    audit_path = path or AUDIT_DIR / "agent_audit.jsonl"
+    if not audit_path.exists():
+        return []
+
+    entries: list[dict[str, Any]] = []
+    for line in audit_path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            entries.append(json.loads(line))
+    return entries

@@ -135,11 +135,16 @@ class AdvisorAgent:
             approval_request,
         )
         output_summary = advisory_brief.splitlines()[0]
+        missing_context = not customer_context["organizational_context_available"]
+        final_decision = self._final_decision(governance_result)
         audit_path = audit.save(
             user_request=user_request,
             customer=customer_name,
+            agent_goal=goal,
             plan=plan,
+            missing_organizational_context=missing_context,
             human_approval_required=governance_result["human_approval_required"],
+            final_agent_decision=final_decision,
             final_output_summary=output_summary,
         )
 
@@ -191,6 +196,17 @@ class AdvisorAgent:
         tool_calls.append(call)
         audit.log_tool_call(tool_name, inputs, result_summary)
         return result
+
+    def _final_decision(self, governance_result: dict[str, Any]) -> str:
+        blocked_rule_ids = {"GOV-001", "GOV-003", "GOV-004"}
+        triggered_ids = {
+            rule["rule_id"] for rule in governance_result["triggered_rules"]
+        }
+        if triggered_ids.intersection(blocked_rule_ids):
+            return "Blocked by governance policy."
+        if governance_result["human_approval_required"]:
+            return "Requires human approval before customer-facing use."
+        return "Allowed for direct display under the current policy."
 
     def _format_brief(
         self,
